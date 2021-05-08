@@ -12,14 +12,6 @@ import (
 func main() {
 	e := echo.New()
 	noteRepository := repository.NewNoteRepository(domain.NoteMap{
-		//1000: 10,
-		//500:  0,
-		//100:  0,
-		//50:   0,
-		//20:   0,
-		//10:   20,
-		//5:    10,
-		//1:    5,
 		1000: 10,
 		500:  15,
 		100:  15,
