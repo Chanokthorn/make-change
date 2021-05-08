@@ -1,9 +1,12 @@
 package interactor
 
 import (
-	"errors"
+	"github.com/davecgh/go-spew/spew"
+	"math"
 	"q-chang/app/domain"
 	"q-chang/app/usecase/repository"
+	"q-chang/app/utils"
+	"sort"
 )
 
 type ChangeInteractor interface {
@@ -18,65 +21,90 @@ func NewChangeInteractor(noteRepository repository.NoteRepository) ChangeInterac
 	return &changeInteractor{noteRepository: noteRepository}
 }
 
-type memo map[float64][]domain.NoteMap
+const maxInt = math.MaxInt64 - 1
 
-func newMemo() memo {
-	return make(map[float64][]domain.NoteMap)
-}
-
-func (m memo) get(amount float64, noteMap domain.NoteMap) (bool, domain.NoteMap) {
-	if _, ok := m[amount]; !ok {
-		return false, nil
+func (c *changeInteractor) runDP(notes []float64, limits []int, amount float64) (dp [][]int, usage [][]bool) {
+	var notesMultiplied []int
+	for _, note := range notes {
+		notesMultiplied = append(notesMultiplied, int(note*2)) //TODO
 	}
-	for _, nm := range m[amount] {
-		if nm.Feasible(noteMap) {
-			return true, nm
+	amountMultiplied := int(amount * 2) //TODO
+
+	dp = utils.Create2DIntArray(len(notesMultiplied), amountMultiplied+1)
+	usage = utils.Create2DBoolArray(len(notesMultiplied), amountMultiplied+1)
+
+	for i := range notesMultiplied {
+		for j := 0; j <= amountMultiplied; j++ {
+			if j == 0 {
+				dp[i][j] = 0
+			} else {
+				dp[i][j] = maxInt
+			}
 		}
 	}
-	return false, nil
+
+	for i, note := range notesMultiplied {
+		useNoteCounts := make([]int, amountMultiplied+1)
+		for val := 1; val <= amountMultiplied; val++ {
+			var useNoteValid bool
+			if val-note >= 0 && dp[i][val-note] != maxInt && useNoteCounts[val-note]+1 <= limits[i] {
+				useNoteValid = true
+			}
+			if i == 0 {
+				if useNoteValid {
+					dp[i][val] = dp[i][val-note] + 1
+					usage[i][val] = true
+					useNoteCounts[val] = useNoteCounts[val-note] + 1
+				}
+				continue
+			}
+			usePreviousNoteResult := dp[i-1][val]
+			if useNoteValid {
+				useNoteResult := dp[i][val-note] + 1
+				if usePreviousNoteResult > useNoteResult {
+					dp[i][val] = useNoteResult
+					usage[i][val] = true
+					useNoteCounts[val] = useNoteCounts[val-note] + 1
+					continue
+				}
+			} else {
+				dp[i][val] = usePreviousNoteResult
+			}
+		}
+	}
+	return
 }
 
-func (m memo) set(amount float64, noteMap domain.NoteMap) {
-	m[amount] = append(m[amount], noteMap)
+func (c *changeInteractor) backtraceDP(notes []float64, amount float64, dp [][]int, usage [][]bool) (domain.NoteMap, error) {
+	panic("")
 }
 
-func (c *changeInteractor) coinChange(amount float64, noteMap, noteLimitMap domain.NoteMap, mem memo) (bool, domain.NoteMap) {
-	if amount == 0 {
-		return true, make(domain.NoteMap)
+func (c *changeInteractor) sortNotes(noteMap domain.NoteMap) (notes []float64, limits []int) {
+	var keys []float64
+	for key := range noteMap {
+		keys = append(keys, key)
 	}
-	if ok, noteMapMemo := mem.get(amount, noteMap); ok {
-		return true, noteMapMemo
+	sort.Float64s(keys)
+	for _, key := range keys {
+		notes = append(notes, key)
+		limits = append(limits, noteMap[key])
 	}
-	for value, count := range noteMap {
-		if value > amount {
-			continue
-		}
-		if count+1 > noteLimitMap[value] {
-			continue
-		}
-		newNoteMap := noteMap.Copy()
-		newNoteMap[value] += 1
-		ok, resultNoteMap := c.coinChange(amount-value, newNoteMap, noteLimitMap, mem)
-		if !ok {
-			continue
-		}
-		resultNoteMap[value] += 1
-		mem.set(amount, resultNoteMap.Copy())
-		return true, resultNoteMap
-	}
-	return false, nil
-}
-
-func (c *changeInteractor) calculateChange(amount float64) (domain.NoteMap, error) {
-	noteMap := c.noteRepository.GetNoteValueToCountMap()
-	mem := newMemo()
-	if ok, result := c.coinChange(amount, noteMap.CopyZero(), noteMap, mem); ok {
-		return result, nil
-	}
-	return nil, errors.New("infeasible")
+	return
 }
 
 func (c *changeInteractor) MakeChange(given, price float64) (domain.NoteMap, error) {
 	amount := given - price
-	return c.calculateChange(amount)
+	currentNoteMap := c.noteRepository.GetNoteValueToCountMap()
+	notes, limits := c.sortNotes(currentNoteMap)
+	dp, usage := c.runDP(notes, limits, amount)
+	sol, _ := c.backtraceDP(notes, amount, dp, usage)
+	spew.Dump(sol)
+	return nil, nil
+	//if err != nil {
+	//	return nil, errors.New("infeasible")
+	//}
+	//err = c.noteRepository.ReduceNote(sol)
+	//if err != nil {
+	//	return nil, fmt.Errorf("unable to reduce notes: %v", err)
+	//}
 }
