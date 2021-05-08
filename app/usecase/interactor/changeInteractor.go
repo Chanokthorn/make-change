@@ -1,7 +1,7 @@
 package interactor
 
 import (
-	"github.com/davecgh/go-spew/spew"
+	"errors"
 	"math"
 	"q-chang/app/domain"
 	"q-chang/app/usecase/repository"
@@ -23,12 +23,16 @@ func NewChangeInteractor(noteRepository repository.NoteRepository) ChangeInterac
 
 const maxInt = math.MaxInt64 - 1
 
-func (c *changeInteractor) runDP(notes []float64, limits []int, amount float64) (dp [][]int, usage [][]bool) {
-	var notesMultiplied []int
+func (c *changeInteractor) getMultipliedVariables(notes []float64, amount float64) (notesMultiplied []int, amountMultiplied int) {
 	for _, note := range notes {
-		notesMultiplied = append(notesMultiplied, int(note*2)) //TODO
+		notesMultiplied = append(notesMultiplied, int(note*100)) //TODO
 	}
-	amountMultiplied := int(amount * 2) //TODO
+	amountMultiplied = int(amount * 100) //TODO
+	return
+}
+
+func (c *changeInteractor) runDP(notes []float64, limits []int, amount float64) (dp [][]int, usage [][]bool) {
+	notesMultiplied, amountMultiplied := c.getMultipliedVariables(notes, amount)
 
 	dp = utils.Create2DIntArray(len(notesMultiplied), amountMultiplied+1)
 	usage = utils.Create2DBoolArray(len(notesMultiplied), amountMultiplied+1)
@@ -76,7 +80,23 @@ func (c *changeInteractor) runDP(notes []float64, limits []int, amount float64) 
 }
 
 func (c *changeInteractor) backtraceDP(notes []float64, amount float64, dp [][]int, usage [][]bool) (domain.NoteMap, error) {
-	panic("")
+	notesMultiplied, amountMultiplied := c.getMultipliedVariables(notes, amount)
+	if dp[len(notesMultiplied)-1][amountMultiplied] == maxInt {
+		return nil, errors.New("infeasible")
+	}
+	result := make(domain.NoteMap)
+	noteIndex := len(notesMultiplied) - 1
+	for {
+		if amountMultiplied == 0 {
+			return result, nil
+		}
+		if usage[noteIndex][amountMultiplied] {
+			result[notes[noteIndex]] += 1
+			amountMultiplied -= notesMultiplied[noteIndex]
+		} else {
+			noteIndex -= 1
+		}
+	}
 }
 
 func (c *changeInteractor) sortNotes(noteMap domain.NoteMap) (notes []float64, limits []int) {
@@ -97,14 +117,15 @@ func (c *changeInteractor) MakeChange(given, price float64) (domain.NoteMap, err
 	currentNoteMap := c.noteRepository.GetNoteValueToCountMap()
 	notes, limits := c.sortNotes(currentNoteMap)
 	dp, usage := c.runDP(notes, limits, amount)
-	sol, _ := c.backtraceDP(notes, amount, dp, usage)
-	spew.Dump(sol)
-	return nil, nil
-	//if err != nil {
-	//	return nil, errors.New("infeasible")
-	//}
+	sol, err := c.backtraceDP(notes, amount, dp, usage)
+	//spew.Dump(sol)
+	//return nil, nil
+	if err != nil {
+		return nil, errors.New("infeasible")
+	}
 	//err = c.noteRepository.ReduceNote(sol)
 	//if err != nil {
 	//	return nil, fmt.Errorf("unable to reduce notes: %v", err)
 	//}
+	return sol, nil
 }

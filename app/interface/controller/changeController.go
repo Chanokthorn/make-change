@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"q-chang/app/interface/internal"
@@ -24,7 +25,7 @@ func (c *ChangeController) MakeChange(e echo.Context) error {
 	}
 	noteMap, err := c.changeInteractor.MakeChange(payload.Given, payload.Price)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "unable to calculate change")
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Sprintf("unable to calculate change: %v", err))
 	}
 	err = e.JSON(http.StatusOK, c.changePresenter.MakeChangeResponse(noteMap))
 	if err != nil {
