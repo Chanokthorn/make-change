@@ -2,11 +2,11 @@ package main
 
 import (
 	"github.com/labstack/echo/v4"
-	"q-chang/app/domain"
-	"q-chang/app/interface/controller"
-	"q-chang/app/interface/presenter"
-	"q-chang/app/interface/repository"
-	"q-chang/app/usecase/interactor"
+	"make-change/app/domain"
+	"make-change/app/interface/controller"
+	"make-change/app/interface/presenter"
+	"make-change/app/interface/repository"
+	"make-change/app/usecase/interactor"
 )
 
 func main() {

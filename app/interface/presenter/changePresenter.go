@@ -1,8 +1,8 @@
 package presenter
 
 import (
-	"q-chang/app/domain"
-	"q-chang/app/interface/internal"
+	"make-change/app/domain"
+	"make-change/app/interface/internal"
 )
 
 type ChangePresenter interface {

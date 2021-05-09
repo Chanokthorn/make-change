@@ -1,6 +1,6 @@
 package repository
 
-import "q-chang/app/domain"
+import "make-change/app/domain"
 
 type NoteRepository interface {
 	GetNoteValueToCountMap() domain.NoteMap

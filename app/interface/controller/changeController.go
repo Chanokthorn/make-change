@@ -3,10 +3,10 @@ package controller
 import (
 	"fmt"
 	"github.com/labstack/echo/v4"
+	"make-change/app/interface/internal"
+	"make-change/app/interface/presenter"
+	"make-change/app/usecase/interactor"
 	"net/http"
-	"q-chang/app/interface/internal"
-	"q-chang/app/interface/presenter"
-	"q-chang/app/usecase/interactor"
 )
 
 type ChangeController struct {

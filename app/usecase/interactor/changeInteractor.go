@@ -2,10 +2,11 @@ package interactor
 
 import (
 	"errors"
+	"fmt"
+	"make-change/app/domain"
+	"make-change/app/usecase/repository"
+	"make-change/app/utils"
 	"math"
-	"q-chang/app/domain"
-	"q-chang/app/usecase/repository"
-	"q-chang/app/utils"
 	"sort"
 )
 
@@ -22,12 +23,13 @@ func NewChangeInteractor(noteRepository repository.NoteRepository) ChangeInterac
 }
 
 const maxInt = math.MaxInt64 - 1
+const multiplication = 100
 
 func (c *changeInteractor) getMultipliedVariables(notes []float64, amount float64) (notesMultiplied []int, amountMultiplied int) {
 	for _, note := range notes {
-		notesMultiplied = append(notesMultiplied, int(note*100)) //TODO
+		notesMultiplied = append(notesMultiplied, int(note*multiplication))
 	}
-	amountMultiplied = int(amount * 100) //TODO
+	amountMultiplied = int(amount * multiplication)
 	return
 }
 
@@ -79,7 +81,7 @@ func (c *changeInteractor) runDP(notes []float64, limits []int, amount float64) 
 	return
 }
 
-func (c *changeInteractor) backtraceDP(notes []float64, amount float64, dp [][]int, usage [][]bool) (domain.NoteMap, error) {
+func (c *changeInteractor) backtrackDP(notes []float64, amount float64, dp [][]int, usage [][]bool) (domain.NoteMap, error) {
 	notesMultiplied, amountMultiplied := c.getMultipliedVariables(notes, amount)
 	if dp[len(notesMultiplied)-1][amountMultiplied] == maxInt {
 		return nil, errors.New("infeasible")
@@ -117,15 +119,13 @@ func (c *changeInteractor) MakeChange(given, price float64) (domain.NoteMap, err
 	currentNoteMap := c.noteRepository.GetNoteValueToCountMap()
 	notes, limits := c.sortNotes(currentNoteMap)
 	dp, usage := c.runDP(notes, limits, amount)
-	sol, err := c.backtraceDP(notes, amount, dp, usage)
-	//spew.Dump(sol)
-	//return nil, nil
+	sol, err := c.backtrackDP(notes, amount, dp, usage)
 	if err != nil {
 		return nil, errors.New("infeasible")
 	}
-	//err = c.noteRepository.ReduceNote(sol)
-	//if err != nil {
-	//	return nil, fmt.Errorf("unable to reduce notes: %v", err)
-	//}
+	err = c.noteRepository.ReduceNote(sol)
+	if err != nil {
+		return nil, fmt.Errorf("unable to reduce notes: %v", err)
+	}
 	return sol, nil
 }

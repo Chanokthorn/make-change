@@ -1,5 +1,5 @@
 package internal
 
-import "q-chang/app/domain"
+import "make-change/app/domain"
 
 type MakeChangeResponse []domain.Note

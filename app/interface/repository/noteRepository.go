@@ -2,7 +2,7 @@ package repository
 
 import (
 	"fmt"
-	"q-chang/app/domain"
+	"make-change/app/domain"
 )
 
 type NoteRepository interface {
