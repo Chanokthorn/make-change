@@ -22,11 +22,11 @@ api:
 │   │ }
 │   │ response: [
 │   │   {
-│   │     note: 100,
+│   │     note: 0.25,
 │   │     amount: 2
 │   │   },
 │   │   {
-│   │     note: 10,
+│   │     note: 0.5,
 │   │     amount: 3
 │   │   },
 │   │   ....
