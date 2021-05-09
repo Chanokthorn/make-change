@@ -17,7 +17,7 @@ func NewChangePresenter() *changePresenter {
 
 func (c *changePresenter) MakeChangeResponse(noteMap domain.NoteMap) (result internal.MakeChangeResponse) {
 	for k, v := range noteMap {
-		result = append(result, *domain.NewNote(k, v))
+		result = append(result, *internal.NewNoteResponse(k, v))
 	}
 	return
 }

@@ -1,5 +1,14 @@
 package internal
 
-import "make-change/app/domain"
+type NoteResponse struct {
+	Note   float64 `json:"note"`
+	Amount int     `json:"amount"`
+}
 
-type MakeChangeResponse []domain.Note
+func NewNoteResponse(value float64, amount int) *NoteResponse {
+	return &NoteResponse{Note: value, Amount: amount}
+}
+
+type NoteList []NoteResponse
+
+type MakeChangeResponse NoteList

@@ -13,7 +13,7 @@ func main() {
 	e := echo.New()
 	noteRepository := repository.NewNoteRepository(domain.NoteMap{
 		1000: 10,
-		500:  15,
+		500:  20,
 		100:  15,
 		50:   20,
 		20:   30,
