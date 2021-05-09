@@ -3,6 +3,7 @@ package presenter
 import (
 	"make-change/app/domain"
 	"make-change/app/interface/internal"
+	"sort"
 )
 
 type ChangePresenter interface {
@@ -16,8 +17,13 @@ func NewChangePresenter() *changePresenter {
 }
 
 func (c *changePresenter) MakeChangeResponse(noteMap domain.NoteMap) (result internal.MakeChangeResponse) {
-	for k, v := range noteMap {
-		result = append(result, *internal.NewNoteResponse(k, v))
+	var keys []float64
+	for key := range noteMap {
+		keys = append(keys, key)
+	}
+	sort.Float64s(keys)
+	for _, key := range keys {
+		result = append(result, *internal.NewNoteResponse(key, noteMap[key]))
 	}
 	return
 }
