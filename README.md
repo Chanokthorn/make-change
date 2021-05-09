@@ -34,6 +34,6 @@ api:
 
 </pre>
 <h2>architecture</h2>
-<img src="./q-chang-architecture.png"/>
+<img src="architecture.png" alt="architecture"/>
 <h2>make change use case sequence diagram</h2>
-<img src="./q-chang-sequence.png"/>
+<img src="sequence.png" alt="sequence"/>
